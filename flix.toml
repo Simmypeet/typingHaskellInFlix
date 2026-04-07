@@ -1,0 +1,6 @@
+[package]
+name = "typingHaskellInFlix"
+description = "Typing Haskell \"But Actually in Flix\""
+version = "0.1.0"
+flix = "0.66.2"
+authors = ["Simmypeet <simmypeet@outlook.com>"]
