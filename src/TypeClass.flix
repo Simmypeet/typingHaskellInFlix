@@ -98,3 +98,32 @@ instance Match[Predicate] {
             }
         }
 }
+
+
+///
+/// An information of the class, containing the list of its superclasses and
+/// the list of available instances.
+///
+pub enum Class(List[Id], List[Instance])
+
+mod Class {
+    pub def superClasses(cls: Class): List[Id] = 
+        match cls {
+            case Class(supers, _) => supers
+        }
+
+    
+    pub def instances(cls: Class): List[Instance] = 
+        match cls {
+            case Class(_, instances) => instances
+        }
+}
+
+
+///
+/// An instance of a type class, which is a qualified predicate. 
+/// For example, `instance[a: Eq] Eq (List a)` can be represented as an instance
+/// where the head is `IsIn (Eq, List a)` and the predicates are 
+/// `[IsIn (Eq, a)]`.
+///
+pub enum Instance(Qualified[Predicate])
