@@ -30,11 +30,23 @@ instance Typeable[Qualified[a]] with Typeable[a] {
     pub def applySubstitution(
         subst: Substitution, 
         x: Qualified[a]
-    ): Qualified[a] = ???
+    ): Qualified[a] = 
+        match x {
+            case Qualified.Qualified(preds, data) => Qualified.Qualified(
+                preds |> Typeable.applySubstitution(subst),
+                data |> Typeable.applySubstitution(subst)
+            )
+        }
 
 
-    pub def typeVars(x: Qualified[a]): Set[TypeVar] = ???
-
+    pub def typeVars(x: Qualified[a]): Set[TypeVar] = 
+        match x {
+            case Qualified.Qualified(preds, data) => 
+                Set.union(
+                    Typeable.typeVars(preds), 
+                    Typeable.typeVars(data)
+                )
+        }
 }
 
 
@@ -67,6 +79,22 @@ instance Mgu[Predicate] {
                 Mgu.mgu(ty1, ty2)
             } else {
                 None // type classes do not match, cannot unify
+            }
+        }
+}
+
+
+instance Match[Predicate] {
+    pub def matches(x: Predicate, y: Predicate): Option[Substitution] = 
+        match (x, y) {
+            case (
+                Predicate.IsIn(IsIn.IsIn(tc1, ty1)), 
+                Predicate.IsIn(IsIn.IsIn(tc2, ty2))
+            ) => if (tc1 == tc2) {
+                Match.matches(ty1, ty2)
+            } else {
+                None // type classes do not match, cannot unify
+
             }
         }
 }

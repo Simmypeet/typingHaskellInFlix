@@ -45,10 +45,11 @@ mod Substitution {
                 Substitution.Substitution(map1), 
                 Substitution.Substitution(map2)
             ) =>  {
-                let newMap2 = Map.map(
-                     ty -> ty |> Typeable.applySubstitution(first), 
-                     map2
-                );
+                // let newMap2 = Map.map(
+                //      ty -> ty |> Typeable.applySubstitution(first), 
+                //      map2
+                // );
+                let newMap2 = ???;
 
                 // Combine the two maps, with the first map taking precedence
                 let combinedMap = Map.union(map1, newMap2);
@@ -114,6 +115,21 @@ pub trait Typeable[a] {
 
     pub def typeVars(x: a): Set[TypeVar]
 }
+
+
+instance Typeable[List[a]] with Typeable[a] {
+    pub def applySubstitution(subst: Substitution, x: List[a]): List[a] = 
+        List.map(elem -> elem |> Typeable.applySubstitution(subst), x)
+
+
+    pub def typeVars(x: List[a]): Set[TypeVar] = 
+        List.foldLeft(
+            (acc, elem) -> Set.union(Typeable.typeVars(elem), acc), 
+            Set.empty(), 
+            x
+        )
+}
+
 
 
 
