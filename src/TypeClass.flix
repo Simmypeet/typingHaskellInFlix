@@ -26,6 +26,20 @@ pub enum Predicate with Eq, Hash, Order, ToString {
 pub enum Qualified[a](List[Predicate], a) with Eq, Hash, Order, ToString
 
 
+mod Qualified  {
+    pub def context(qualified: Qualified[a]): List[Predicate] = 
+        match qualified {
+            case Qualified(preds, _) => preds
+        }
+
+    
+    pub def head(qualified: Qualified[a]): a = 
+        match qualified {
+            case Qualified(_, data) => data
+        }
+}
+
+
 instance Typeable[Qualified[a]] with Typeable[a] {
     pub def applySubstitution(
         subst: Substitution, 
@@ -104,10 +118,14 @@ instance Match[Predicate] {
 /// An information of the class, containing the list of its superclasses and
 /// the list of available instances.
 ///
-pub enum Class(List[Id], List[Instance])
+pub enum Class(List[ClassId], List[Instance]) with Eq, Hash, Order, ToString
 
 mod Class {
-    pub def superClasses(cls: Class): List[Id] = 
+    pub def newWithSupers(supers: List[ClassId]): Class = 
+        Class(supers, List.empty())
+
+
+    pub def superClasses(cls: Class): List[ClassId] = 
         match cls {
             case Class(supers, _) => supers
         }
@@ -116,6 +134,13 @@ mod Class {
     pub def instances(cls: Class): List[Instance] = 
         match cls {
             case Class(_, instances) => instances
+        }
+
+    
+    pub def addInstance(inst: Instance, cls: Class): Class = 
+        match cls {
+            case Class(supers, instances) => 
+                Class(supers, inst :: instances)
         }
 }
 
@@ -126,4 +151,20 @@ mod Class {
 /// where the head is `IsIn (Eq, List a)` and the predicates are 
 /// `[IsIn (Eq, a)]`.
 ///
-pub enum Instance(Qualified[Predicate])
+pub enum Instance(Qualified[Predicate]) with Eq, Hash, Order, ToString
+
+
+mod Instance {
+    def getQualified(inst: Instance): Qualified[Predicate] = match inst {
+        case Instance(q) => q
+    }
+
+
+    pub def head(inst: Instance): Predicate = 
+        inst |> getQualified |> Qualified.head
+
+
+    pub def context(inst: Instance): List[Predicate] = 
+        inst |> getQualified |> Qualified.context
+
+}
