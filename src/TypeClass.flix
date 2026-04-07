@@ -11,12 +11,44 @@ pub enum ClassId(Id) with Eq, Hash, Order, ToString
 pub enum IsIn(ClassId, Type) with Eq, Hash, Order, ToString
 
 
+mod IsIn {
+    pub def classId(pred: IsIn): ClassId = match pred {
+        case IsIn(classId, _) => classId
+    }
+
+    
+    pub def ty(pred: IsIn): Type = match pred {
+        case IsIn(_, ty) => ty
+    }
+}
+
+
 ///
 /// An enumeration of predicates that can appear in the solver.
 ///
 pub enum Predicate with Eq, Hash, Order, ToString {
     case IsIn(IsIn)
 }
+
+
+mod Predicate {
+    pub def newWith(classId: ClassId, ty: Type): Predicate = 
+        Predicate.IsIn(IsIn.IsIn(classId, ty))
+
+
+    def isIn(pred: Predicate): IsIn = match pred {
+        case Predicate.IsIn(isIn) => isIn
+    }
+
+
+    pub def classId(pred: Predicate): ClassId = 
+        pred |> isIn |> IsIn.classId
+
+
+    pub def ty(pred: Predicate): Type = 
+        pred |> isIn |> IsIn.ty
+}
+
 
 ///
 /// Represents a qualified data, which must satisfy the predicates in order to 
@@ -37,6 +69,11 @@ mod Qualified  {
         match qualified {
             case Qualified(_, data) => data
         }
+
+    
+    pub def headClassId(qualified: Qualified[Predicate]): ClassId = 
+        qualified |> head |> Predicate.classId
+        
 }
 
 
@@ -166,5 +203,13 @@ mod Instance {
 
     pub def context(inst: Instance): List[Predicate] = 
         inst |> getQualified |> Qualified.context
+
+    
+    pub def headClassId(inst: Instance): ClassId = 
+        inst |> head |> Predicate.classId
+
+
+    pub def headType(inst: Instance): Type = 
+        inst |> head |> Predicate.ty
 
 }

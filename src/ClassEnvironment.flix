@@ -90,10 +90,10 @@ mod ClassEnvironment {
 
     pub def addInstance(
         inst: Instance, 
-        classId: ClassId, 
         env: ClassEnvironment
     ): Result[AddInstanceError, ClassEnvironment] = {
         let classMap = getClassMap(env);
+        let classId = inst |> Instance.headClassId;
 
         match Map.get(classId, classMap) {
             case Some(cls) => {
