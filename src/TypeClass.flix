@@ -1,14 +1,14 @@
 ///
 /// A symbolic name for a type class. For example, `Eq` a type class 
 ///
-pub enum TypeClass(Id) with Eq, Hash, Order, ToString
+pub enum ClassId(Id) with Eq, Hash, Order, ToString
 
 
 ///
 /// A predicate reprsenting that the `type` must be an instance of the 
 /// `typeClases`
 ///
-pub enum IsIn(TypeClass, Type) with Eq, Hash, Order, ToString
+pub enum IsIn(ClassId, Type) with Eq, Hash, Order, ToString
 
 
 ///
