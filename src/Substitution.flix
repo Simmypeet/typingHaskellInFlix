@@ -16,11 +16,16 @@ pub enum MergeConflictError(TypeVar, Type, Type)
 
 
 mod Substitution {
+    pub def fromMap(map: Map[TypeVar, Type]): Substitution = 
+        Substitution.Substitution(map)
+
+
     pub def get(var: TypeVar, subst: Substitution): Option[Type] = {
         match subst {
             case Substitution.Substitution(map) => map |> Map.get(var)
         }
     }
+
 
     def internalMapings(subst: Substitution): Map[TypeVar, Type] = match subst {
         case Substitution.Substitution(map) => map
@@ -113,7 +118,7 @@ mod Substitution {
 pub trait Typeable[a] {
     pub def applySubstitution(subst: Substitution, x: a): a
 
-    pub def typeVars(x: a): Set[TypeVar]
+    pub def typeVars(x: a): List[TypeVar]
 }
 
 
@@ -122,10 +127,10 @@ instance Typeable[List[a]] with Typeable[a] {
         List.map(elem -> elem |> Typeable.applySubstitution(subst), x)
 
 
-    pub def typeVars(x: List[a]): Set[TypeVar] = 
+    pub def typeVars(x: List[a]): List[TypeVar] = 
         List.foldLeft(
-            (acc, elem) -> Set.union(Typeable.typeVars(elem), acc), 
-            Set.empty(), 
+            (acc, elem) -> listUnion(acc, Typeable.typeVars(elem)), 
+            List.empty(), 
             x
         )
 }

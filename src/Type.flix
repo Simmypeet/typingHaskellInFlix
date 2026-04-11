@@ -232,7 +232,7 @@ def matches(ty1: Type, ty2: Type): Option[Substitution] =
 def varBind(tyVar: TypeVar, ty: Type): Result[BindError, Substitution] = {
     if (ty == Type.Var(tyVar)) {
         Ok(Substitution.empty())
-    } else if (Typeable.typeVars(ty) |> Set.memberOf(tyVar)) {
+    } else if (Typeable.typeVars(ty) |> List.memberOf(tyVar)) {
         Err(BindError.OccursCheckFailed)
     } else if (GetKind.getKind(tyVar) != GetKind.getKind(ty)) {
         Err(BindError.KindMismatch)
@@ -275,17 +275,17 @@ instance Typeable[Type] {
         case Type.Gen(_) => x // generic types are unaffected by substitutions
     }
 
-    pub def typeVars(x: Type): Set[TypeVar] = match x {
-        case Type.Var(var) => Set.singleton(var)
+    pub def typeVars(x: Type): List[TypeVar] = match x {
+        case Type.Var(var) => var :: Nil,
         case Type.App(app) => match app {
             case TypeApp.TypeApp(t1, t2) => 
-                Set.union(
+                listUnion(
                     t1 |> Typeable.typeVars,
                     t2 |> Typeable.typeVars
                 )
         }
-        case Type.Con(_) => Set.empty() // type constructors have no type variables
-        case Type.Gen(_) => Set.empty() // generic types have no type variables
+        case Type.Con(_) => Nil // type constructors have no type variables
+        case Type.Gen(_) => Nil // generic types have no type variables
     }
 }
 

@@ -59,6 +59,9 @@ pub enum Qualified[a](List[Predicate], a) with Eq, Hash, Order, ToString
 
 
 mod Qualified  {
+    pub def newHead(data: a): Qualified[a] = Qualified(Nil, data) 
+
+
     pub def context(qualified: Qualified[a]): List[Predicate] = 
         match qualified {
             case Qualified(preds, _) => preds
@@ -90,10 +93,10 @@ instance Typeable[Qualified[a]] with Typeable[a] {
         }
 
 
-    pub def typeVars(x: Qualified[a]): Set[TypeVar] = 
+    pub def typeVars(x: Qualified[a]): List[TypeVar] = 
         match x {
             case Qualified.Qualified(preds, data) => 
-                Set.union(
+                listUnion(
                     Typeable.typeVars(preds), 
                     Typeable.typeVars(data)
                 )
@@ -112,7 +115,7 @@ instance Typeable[Predicate] {
         }
 
 
-    pub def typeVars(x: Predicate): Set[TypeVar] = 
+    pub def typeVars(x: Predicate): List[TypeVar] = 
         match x {
             case Predicate.IsIn(IsIn.IsIn(_, ty)) => 
                 Typeable.typeVars(ty)
