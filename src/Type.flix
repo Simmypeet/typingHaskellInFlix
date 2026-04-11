@@ -47,6 +47,16 @@ pub enum TypeCon(Id, Kind) with Eq, Hash, Order, ToString
 ///
 pub enum TypeApp(Type, Type) with Eq, Hash, Order, ToString
 
+mod TypeApp {
+    pub def head(tapp: TypeApp): Type = match tapp {
+        case TypeApp(fun, _) => fun
+    }
+
+    pub def arg(tapp: TypeApp): Type = match tapp {
+        case TypeApp(_, arg) => arg
+    }
+}
+
 
 ///
 /// An ADT representing a type term in the type system

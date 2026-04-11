@@ -35,9 +35,9 @@ def bySuper(
 /// If such an instance is found, returns a list of predicates that must be 
 /// further satisfied in order for the original predicate to be satisfied. 
 ///
-def byInstance(
-    classEnv: ClassEnvironment,
-    pred: Predicate
+pub def byInstance(
+    pred: Predicate,
+    classEnv: ClassEnvironment
 ): Option[List[Predicate]] = {
     let classId = pred |> Predicate.classId;
     let ty = pred |> Predicate.ty;
@@ -71,24 +71,24 @@ def byInstance(
 /// can be derived from them.
 ///
 pub def entails(
-    classEnv: ClassEnvironment,
     premises: List[Predicate],
-    conclusion: Predicate
+    conclusion: Predicate,
+    classEnv: ClassEnvironment
 ): Bool = {
     let bySuperPreds = bySuper(classEnv, conclusion);
 
     if (Set.memberOf(conclusion, bySuperPreds)) {
         true
     } else {
-        match byInstance(classEnv, conclusion) {
+        match byInstance(conclusion, classEnv) {
             case None => false
             case Some(subgoals) => {
 
                 List.forAll(
                     subgoal -> entails(
-                        classEnv, 
                         premises, 
-                        subgoal
+                        subgoal,
+                        classEnv 
                     ),
                     subgoals
                 )
