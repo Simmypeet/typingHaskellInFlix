@@ -95,6 +95,12 @@ mod Type {
 
     pub def listApply(elemType: Type): Type = Type.apply(list(), elemType)
 
+
+    pub def arrowApply(left: Type, right: Type): Type = Type.apply(
+        Type.apply(arrow(), left), 
+        right
+    )
+
     pub def arrow(): Type = Type.Con(
         TypeCon.TypeCon(
             Id.Id("->"), 

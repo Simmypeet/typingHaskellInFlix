@@ -1,5 +1,4 @@
-use Iterator.Step
-pub enum Scheme(List[Kind], Qualified[Type])
+pub enum Scheme(List[Kind], Qualified[Type]) with Eq, Hash, Order, ToString
 
 
 def toGenSubst(
@@ -56,4 +55,35 @@ mod Scheme {
         match scheme {
             case Scheme(_, qualifiedType) => qualifiedType
         }
+}
+
+
+mod Test {
+    use Assert.assertEq
+
+    @Test
+    pub def testQuantify(): Unit \ Assert = {
+        let tyVarA = Type.varT("a");
+        let tyVarB = Type.varT("b");
+        let tyVarC = Type.varT("c");
+        let tyVarD = Type.varT("d");
+
+        let aarrowb = Qualified.newHead(Type.arrowApply(tyVarA, tyVarB));
+        let carrowd = Qualified.newHead(Type.arrowApply(tyVarC, tyVarD));
+
+        let firstScheme = Scheme.quantify(
+            Typeable.typeVars(aarrowb) |> List.toSet,
+            aarrowb
+        );
+
+        let secondScheme = Scheme.quantify(
+            Typeable.typeVars(carrowd) |> List.toSet,
+            carrowd
+        );
+
+
+        assertEq({expected = firstScheme}, secondScheme)
+
+    }
+
 }
