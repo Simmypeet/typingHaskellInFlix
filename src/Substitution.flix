@@ -50,11 +50,10 @@ mod Substitution {
                 Substitution.Substitution(map1), 
                 Substitution.Substitution(map2)
             ) =>  {
-                // let newMap2 = Map.map(
-                //      ty -> ty |> Typeable.applySubstitution(first), 
-                //      map2
-                // );
-                let newMap2 = ???;
+                let newMap2 = Map.map(
+                     ty -> ty |> Typeable.applySubstitution(first), 
+                     map2
+                );
 
                 // Combine the two maps, with the first map taking precedence
                 let combinedMap = Map.union(map1, newMap2);
