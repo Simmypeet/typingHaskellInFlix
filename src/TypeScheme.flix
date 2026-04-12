@@ -58,6 +58,23 @@ mod Scheme {
 }
 
 
+instance Typeable[Scheme] {
+    pub def applySubstitution(subst: Substitution, x: Scheme): Scheme = match x {
+        case Scheme.Scheme(kinds, qualifiedType) => Scheme.Scheme(
+            kinds, 
+            qualifiedType |> Typeable.applySubstitution(subst)
+        )
+    }
+
+    pub def typeVars(x: Scheme): List[TypeVar] = 
+        match x {
+            case Scheme.Scheme(_, qualifiedType) => 
+                Typeable.typeVars(qualifiedType)
+        }
+}
+
+
+
 mod Test {
     use Assert.assertEq
 
@@ -83,7 +100,5 @@ mod Test {
 
 
         assertEq({expected = firstScheme}, secondScheme)
-
     }
-
 }

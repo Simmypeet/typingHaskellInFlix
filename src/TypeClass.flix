@@ -216,3 +216,30 @@ mod Instance {
         inst |> head |> Predicate.ty
 
 }
+
+
+instance Instantiate[Predicate] {
+    pub def instantiate(types: List[Type], template: Predicate): Predicate = 
+        match template {
+            case Predicate.IsIn(IsIn.IsIn(classId, ty)) => {
+                let tyInst = ty |> Instantiate.instantiate(types);
+
+                Predicate.IsIn(IsIn.IsIn(classId, tyInst))
+            }
+        }
+}
+
+
+instance Instantiate[Qualified[a]] with Instantiate[a] {
+    pub def instantiate(
+        types: List[Type], 
+        template: Qualified[a]
+    ): Qualified[a] =  {
+        match template {
+            case Qualified.Qualified(preds, data) => Qualified.Qualified(
+                preds |> List.map(pred -> Instantiate.instantiate(types, pred)),
+                data |> Instantiate.instantiate(types)
+            )
+        }
+    }
+}

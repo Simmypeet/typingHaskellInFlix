@@ -1,0 +1,146 @@
+struct TypeInferenceState[r] {
+    mut currentSubst: Substitution,
+    mut counter: Int32
+}
+
+
+mod TypeInferenceState {
+    pub def extendSubstitution(
+        subst: Substitution,
+        state: TypeInferenceState[r]
+    ): Unit \ r = {
+        state->currentSubst = Substitution.compose(subst, state->currentSubst);
+
+        ()
+    }
+
+    pub def newTypeVar(state: TypeInferenceState[r]): TypeVar \ r = {
+        let var = TypeVar.varT("@t" + Int32.toString(state->counter));
+        state->counter = state->counter + 1;
+        var
+    }
+
+
+    pub def currentSubstitution(state: TypeInferenceState[r]): Substitution \ r = 
+        state->currentSubst
+}
+
+
+pub eff TypeInference {
+    def extendSubstitution(subst: Substitution): Unit
+    def getSubstitution(): Substitution
+    def newTypeVar(): TypeVar
+}
+
+
+pub enum UnificationError(Type, Type) with Eq, ToString
+
+
+mod TypeInference {
+    use Mgu.mgu
+    @DefaultHandler
+    pub def runWithTypeInference(f: Unit -> b \ e): b \ (e - TypeInference) + IO = {
+        region r {
+            let typeInferenceState = new TypeInferenceState @ r {
+                currentSubst = Substitution.empty(),
+                counter = 0
+            };
+
+            run {
+                f()
+            } with handler TypeInference {
+                def extendSubstitution(subst, k) = {
+                    TypeInferenceState.extendSubstitution(subst, typeInferenceState);
+                    k()
+                }
+
+                def getSubstitution(k) = {
+                    k(TypeInferenceState.currentSubstitution(typeInferenceState))
+                }
+
+                def newTypeVar(k) = {
+                    let var = TypeInferenceState.newTypeVar(typeInferenceState);
+                    k(var)
+                }
+            }
+        }
+    }
+
+
+    pub def unifyTypes(
+        ty1: Type, 
+        ty2: Type
+    ): Result[UnificationError, Unit] \ TypeInference = {
+        let subst = TypeInference.getSubstitution();
+
+        let ty1Subst = ty1 |> Typeable.applySubstitution(subst);
+        let ty2Subst = ty2 |> Typeable.applySubstitution(subst);
+
+        match mgu(ty1Subst, ty2Subst) {
+            case Some(newSubst) => {
+                TypeInference.extendSubstitution(newSubst);
+
+                Ok(())
+            }
+
+            case None => Err(
+                UnificationError.UnificationError(ty1Subst, ty2Subst)
+            )
+        }
+    }
+}
+
+
+pub trait Instantiate[t] {
+    pub def instantiate(types: List[Type], template: t): t
+}
+
+
+instance Instantiate[List[a]] with Instantiate[a] {
+    pub def instantiate(types: List[Type], template: List[a]): List[a] = 
+        List.map(elem -> elem |> Instantiate.instantiate(types), template)
+}
+
+
+mod Test {
+    use Assert.assertEq
+
+    @Test
+    def basicTypeInferenceUnification(): Unit \ TypeInference + Assert = {
+        let tvarA = Type.Var(TypeInference.newTypeVar());
+        let tvarB = Type.Var(TypeInference.newTypeVar());
+        let tvarC = Type.Var(TypeInference.newTypeVar());
+
+        let tyInt32 = Type.int32();
+
+        assertEq({expected = Ok(())}, TypeInference.unifyTypes(tvarA, tvarB));
+        assertEq({expected = Ok(())}, TypeInference.unifyTypes(tvarB, tvarC));
+
+        assertEq({expected = Ok(())}, TypeInference.unifyTypes(tvarC, tyInt32));
+
+        // all types should be unified to int32 at this point
+
+        let subst = TypeInference.getSubstitution();
+
+        let tyA = tvarA |> Typeable.applySubstitution(subst);
+        let tyB = tvarB |> Typeable.applySubstitution(subst);
+        let tyC = tvarC |> Typeable.applySubstitution(subst);
+
+        assertEq({expected = tyInt32}, tyA);
+        assertEq({expected = tyInt32}, tyB);
+        assertEq({expected = tyInt32}, tyC);
+
+        let tyBool = Type.bool();
+
+        assertEq(
+            {
+                expected = Err(
+                    UnificationError.UnificationError(tyInt32, tyBool)
+                )
+            }, 
+            TypeInference.unifyTypes(tyA, tyBool)
+        );
+
+        ()
+    }
+}

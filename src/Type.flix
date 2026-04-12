@@ -101,6 +101,7 @@ mod Type {
         right
     )
 
+
     pub def arrow(): Type = Type.Con(
         TypeCon.TypeCon(
             Id.Id("->"), 
@@ -294,6 +295,30 @@ instance Typeable[Type] {
         case Type.Gen(_) => Nil // generic types have no type variables
     }
 }
+
+
+instance Instantiate[Type] {
+    pub def instantiate(types: List[Type], template: Type): Type = 
+        match template {
+            case Type.Gen(index) => {
+                let ty = List.get(index, types);
+
+                ty
+            }
+
+            case Type.App(app) => match app {
+                case TypeApp.TypeApp(t1, t2) => Type.App(
+                    TypeApp.TypeApp(
+                        t1 |> Instantiate.instantiate(types),
+                        t2 |> Instantiate.instantiate(types)
+                    )
+                )
+            }
+
+            case x => x // Type.Var and Type.Con are unaffected by instantiation
+        }
+}
+
 
 
 mod Test {
