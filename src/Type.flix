@@ -73,25 +73,41 @@ mod Type {
         TypeCon.TypeCon(Id.Id("Unit"), Kind.Star)
     )
 
+
     pub def list(): Type = Type.Con(
         TypeCon.TypeCon(Id.Id("List"), Kind.Arrow(Kind.Star, Kind.Star))
     )
+
 
     pub def int32(): Type = Type.Con(
         TypeCon.TypeCon(Id.Id("Int32"), Kind.Star)
     )
 
+
     pub def bool(): Type = Type.Con(
         TypeCon.TypeCon(Id.Id("Bool"), Kind.Star)
     )
+
 
     pub def varT(name: String): Type = Type.Var(
         TypeVar.TypeVar(Id.Id(name), Kind.Star)
     )
 
+
     pub def apply(func: Type, arg: Type): Type = Type.App(
         TypeApp.TypeApp(func, arg)
     )
+
+
+    pub def char(): Type = Type.Con(
+        TypeCon.TypeCon(Id.Id("Char"), Kind.Star)
+    )
+
+
+    pub def string(): Type = Type.Con(
+        TypeCon.TypeCon(Id.Id("String"), Kind.Star)
+    )
+
 
     pub def listApply(elemType: Type): Type = Type.apply(list(), elemType)
 

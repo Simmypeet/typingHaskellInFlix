@@ -18,7 +18,7 @@ def bySuper(
             (set, superClassId) -> {
                 let superPred = bySuper(
                     classEnv, 
-                    Predicate.newWith(superClassId, ty)
+                    Predicate.createIsIn(superClassId, ty)
                 );
 
                 Set.union(set, superPred)

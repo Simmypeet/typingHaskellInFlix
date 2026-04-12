@@ -4,6 +4,21 @@
 pub enum ClassId(Id) with Eq, Hash, Order, ToString
 
 
+mod ClassId {
+    pub def num(): ClassId = ClassId(Id.Id("Num"))
+
+
+    pub def eq(): ClassId = ClassId(Id.Id("Eq"))
+
+
+    pub def fractional(): ClassId = ClassId(Id.Id("Fractional"))
+
+
+    
+    pub def fromName(name: String): ClassId = ClassId(Id.Id(name))
+}
+
+
 ///
 /// A predicate reprsenting that the `type` must be an instance of the 
 /// `typeClases`
@@ -32,8 +47,14 @@ pub enum Predicate with Eq, Hash, Order, ToString {
 
 
 mod Predicate {
-    pub def newWith(classId: ClassId, ty: Type): Predicate = 
+    pub def createIsIn(classId: ClassId, ty: Type): Predicate = 
         Predicate.IsIn(IsIn.IsIn(classId, ty))
+
+
+    pub def num(ty: Type): Predicate = createIsIn(ClassId.num(), ty)
+
+
+    pub def fractional(ty: Type): Predicate = createIsIn(ClassId.fractional(), ty)
 
 
     def isIn(pred: Predicate): IsIn = match pred {
@@ -47,6 +68,36 @@ mod Predicate {
 
     pub def ty(pred: Predicate): Type = 
         pred |> isIn |> IsIn.ty
+}
+
+
+///
+/// Represents a list of predicates propagated during the type inference 
+/// process.
+///
+pub enum Predicates(List[Predicate]) with Eq, Hash, Order, ToString
+
+
+mod Predicates {
+    pub def empty(): Predicates = Predicates(Nil)
+
+
+    pub def singleton(pred: Predicate): Predicates = Predicates(pred :: Nil)
+
+
+    def predicateList(preds: Predicates): List[Predicate] = match preds {
+        case Predicates(predList) => predList
+    }
+
+
+    pub def add(pred: Predicate, preds: Predicates): Predicates = 
+        Predicates(pred :: (preds |> predicateList))
+
+
+    pub def append(back: Predicates, front: Predicates): Predicates = 
+        Predicates(
+            (front |> predicateList) ++ (back |> predicateList)
+        )
 }
 
 
