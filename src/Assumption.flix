@@ -1,3 +1,6 @@
+///
+/// A new type wrapper over `Id` to represent an individual variable.
+///
 pub enum Variable(Id) with Eq, Hash, Order, ToString
 
 
@@ -10,6 +13,12 @@ mod Variable {
 }
 
 
+///
+/// Represents a type scheme associated with a variable. For example, 
+/// if we have a variable `x` with type scheme `forall a. Eq a => a -> a`, 
+/// then we can represent this as an assumption where the variable is `x` and 
+/// the scheme is `forall a. Eq a => a -> a`.
+///               
 pub enum Assumption(Variable, Scheme) with Eq, Hash, Order, ToString
 
 
@@ -24,7 +33,11 @@ mod Assumption {
     }
 }
 
-
+///
+/// A collection of assumptions, essentially a mapping from variables to their
+/// type schemes. In the paper, it seems to use linear search to find the type
+/// scheme for a variable for some reason, but it's more efficient to use a map.
+///
 pub enum Assumptions(List[Assumption]) with Eq, Hash, Order, ToString
 
 

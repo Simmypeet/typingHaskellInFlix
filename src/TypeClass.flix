@@ -59,6 +59,10 @@ pub enum Qualified[a](List[Predicate], a) with Eq, Hash, Order, ToString
 
 
 mod Qualified  {
+    pub def create(preds: List[Predicate], data: a): Qualified[a] = 
+        Qualified(preds, data)
+
+
     pub def newHead(data: a): Qualified[a] = Qualified(Nil, data) 
 
 

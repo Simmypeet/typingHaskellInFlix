@@ -55,6 +55,18 @@ mod Scheme {
         match scheme {
             case Scheme(_, qualifiedType) => qualifiedType
         }
+
+    
+    pub def context(scheme: Scheme): List[Predicate] = 
+        scheme 
+            |> qualifiedType 
+            |> Qualified.context
+
+
+    pub def head(scheme: Scheme): Type =
+        scheme 
+            |> qualifiedType 
+            |> Qualified.head
 }
 
 

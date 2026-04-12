@@ -88,6 +88,20 @@ mod TypeInference {
             )
         }
     }
+
+
+    pub def freshInstantiate(
+        scheme: Scheme
+    ): Qualified[Type] \ TypeInference = {
+        let foralls = scheme 
+            |> Scheme.kinds 
+            |> List.map(_ -> Type.Var(TypeInference.newTypeVar()));
+
+        Qualified.create(
+            scheme |> Scheme.context |> Instantiate.instantiate(foralls),
+            scheme |> Scheme.head |> Instantiate.instantiate(foralls)
+        )
+    }
 }
 
 
