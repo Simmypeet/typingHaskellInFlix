@@ -9,26 +9,26 @@ pub enum Literal with Eq, Hash, Order, ToString {
 mod Literal {
     pub def typeInference(
         lit: Literal
-    ): (Predicates, Type) \ TypeInference = {
+    ): (List[Predicate], Type) \ TypeInference = {
         match lit {
             case Integer(_) => {
                 let tyVar = Type.Var(TypeInference.newTypeVar());
 
                 (
-                    Predicates.singleton(Predicate.num(tyVar)),
+                    Predicate.num(tyVar) :: Nil,
                     tyVar
                 )
             }
 
-            case Char(_) => (Predicates.empty(), Type.char())
+            case Char(_) => (Nil, Type.char())
 
-            case String(_) => (Predicates.empty(), Type.string())
+            case String(_) => (Nil, Type.string())
 
             case Rational(_) => {
                 let tyVar = Type.Var(TypeInference.newTypeVar());
 
                 (
-                    Predicates.singleton(Predicate.fractional(tyVar)),
+                    Predicate.fractional(tyVar) :: Nil,
                     tyVar
                 )
             }
