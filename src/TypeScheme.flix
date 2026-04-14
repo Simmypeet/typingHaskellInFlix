@@ -22,7 +22,7 @@ def toGenSubst(
 
 
 mod Scheme {
-    pub def toScheme(ty: Type): Scheme = {
+    pub def createSimpleScheme(ty: Type): Scheme = {
         Scheme(Nil, Qualified.newHead(ty))
     }
 

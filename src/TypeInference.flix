@@ -36,6 +36,34 @@ pub eff TypeInference {
 pub enum UnificationError(Type, Type) with Eq, ToString
 
 
+pub eff UnificationFailure {
+    def error(error: UnificationError): Void
+}
+
+
+mod UnificationFailure {
+    pub def toResult(f: Unit -> b \ e): Result[UnificationError, b] \ e - UnificationFailure = {
+        run {
+            Ok(f())
+        } with handler UnificationFailure {
+            def error(error, _) = Err(error)
+        }
+    }
+
+    @DefaultHandler
+    pub def runWithDefault(
+        f: Unit -> b \ e
+    ): b \ (e - UnificationFailure) + IO = {
+        run {
+            f()
+        } with handler UnificationFailure {
+            def error(error, _k) = 
+                bug!("Unhandled Unification Failure effect " + error.toString())
+        }
+    }
+}
+
+
 mod TypeInference {
     use Mgu.mgu
     @DefaultHandler
@@ -47,8 +75,7 @@ mod TypeInference {
             };
 
             run {
-                f()
-            } with handler TypeInference {
+                f() } with handler TypeInference {
                 def extendSubstitution(subst, k) = {
                     TypeInferenceState.extendSubstitution(subst, typeInferenceState);
                     k()
@@ -70,7 +97,7 @@ mod TypeInference {
     pub def unifyTypes(
         ty1: Type, 
         ty2: Type
-    ): Result[UnificationError, Unit] \ TypeInference = {
+    ): Unit \ (TypeInference + UnificationFailure) = {
         let subst = TypeInference.getSubstitution();
 
         let ty1Subst = ty1 |> Typeable.applySubstitution(subst);
@@ -80,10 +107,10 @@ mod TypeInference {
             case Some(newSubst) => {
                 TypeInference.extendSubstitution(newSubst);
 
-                Ok(())
+                ()
             }
 
-            case None => Err(
+            case None => UnificationFailure.error(
                 UnificationError.UnificationError(ty1Subst, ty2Subst)
             )
         }
@@ -120,17 +147,16 @@ mod Test {
     use Assert.assertEq
 
     @Test
-    def basicTypeInferenceUnification(): Unit \ TypeInference + Assert = {
+    def basicTypeInferenceUnification(): Unit \ TypeInference + UnificationFailure + Assert = {
         let tvarA = Type.Var(TypeInference.newTypeVar());
         let tvarB = Type.Var(TypeInference.newTypeVar());
         let tvarC = Type.Var(TypeInference.newTypeVar());
 
         let tyInt32 = Type.int32();
 
-        assertEq({expected = Ok(())}, TypeInference.unifyTypes(tvarA, tvarB));
-        assertEq({expected = Ok(())}, TypeInference.unifyTypes(tvarB, tvarC));
-
-        assertEq({expected = Ok(())}, TypeInference.unifyTypes(tvarC, tyInt32));
+        assertEq({expected = ()}, TypeInference.unifyTypes(tvarA, tvarB));
+        assertEq({expected = ()}, TypeInference.unifyTypes(tvarB, tvarC));
+        assertEq({expected = ()}, TypeInference.unifyTypes(tvarC, tyInt32));
 
         // all types should be unified to int32 at this point
 
@@ -152,7 +178,7 @@ mod Test {
                     UnificationError.UnificationError(tyInt32, tyBool)
                 )
             }, 
-            TypeInference.unifyTypes(tyA, tyBool)
+            run TypeInference.unifyTypes(tyA, tyBool) with UnificationFailure.toResult
         );
 
         ()

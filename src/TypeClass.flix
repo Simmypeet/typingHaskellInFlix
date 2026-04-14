@@ -8,11 +8,13 @@ mod ClassId {
     pub def num(): ClassId = ClassId(Id.Id("Num"))
 
 
+    pub def integral(): ClassId = ClassId(Id.Id("Integral"))
+
+
     pub def eq(): ClassId = ClassId(Id.Id("Eq"))
 
 
     pub def fractional(): ClassId = ClassId(Id.Id("Fractional"))
-
 
     
     pub def fromName(name: String): ClassId = ClassId(Id.Id(name))
@@ -55,6 +57,9 @@ mod Predicate {
 
 
     pub def fractional(ty: Type): Predicate = createIsIn(ClassId.fractional(), ty)
+
+
+    pub def integral(ty: Type): Predicate = createIsIn(ClassId.integral(), ty)
 
 
     def isIn(pred: Predicate): IsIn = match pred {
