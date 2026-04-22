@@ -64,13 +64,13 @@ mod Pattern {
         \ TypeInference + UnificationFailure = {
         let a = match pattern {
             case Pattern.Wildcard => {
-                let newTyVar = Type.Var(TypeInference.newTypeVar());
+                let newTyVar = Type.Var(TypeInference.newTypeVar(Kind.Star));
 
                 (Nil, Nil, newTyVar)
             }
 
             case Pattern.Var(var) => {
-                let newTyVar = Type.Var(TypeInference.newTypeVar());
+                let newTyVar = Type.Var(TypeInference.newTypeVar(Kind.Star));
 
                 (
                     Nil,
@@ -104,7 +104,7 @@ mod Pattern {
             }
 
             case Pattern.NPlusK(npk) => {
-                let ty = Type.Var(TypeInference.newTypeVar());
+                let ty = Type.Var(TypeInference.newTypeVar(Kind.Star));
 
                 (
                     Predicate.integral(ty) :: Nil,
@@ -120,7 +120,7 @@ mod Pattern {
                 let (ps, assumptions, tys) = 
                     typeInferenceMany(constructor |> Constructor.innerPatterns);
 
-                let newTy = Type.Var(TypeInference.newTypeVar());
+                let newTy = Type.Var(TypeInference.newTypeVar(Kind.Star));
 
                 let scheme = constructor |> Constructor.scheme;
                 let freshScheme = scheme |> TypeInference.freshInstantiate;

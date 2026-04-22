@@ -12,7 +12,6 @@ mod Variable {
         Variable(Id.Id(idStr))
 }
 
-
 pub eff AssumptionNotFoundFailure {
     def notFound(variable: Variable): Void
 }

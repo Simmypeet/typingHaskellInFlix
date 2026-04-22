@@ -25,7 +25,7 @@ pub def split(
     (
         deferred, 
         retained |> List.filter(
-            x -> eliminatings |> Set.memberOf(x)
+            x -> not (eliminatings |> Set.memberOf(x))
         ))
 
 }

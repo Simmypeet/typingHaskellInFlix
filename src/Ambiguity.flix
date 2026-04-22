@@ -29,7 +29,7 @@ mod Ambiguity {
     ): List[Ambiguity] = {
         let allPredicatesTyVars = predicates |> Typeable.typeVars;
         let ambiguousTyVars = allPredicatesTyVars 
-            |> List.filter(x -> Set.memberOf(x, tyVars));
+            |> List.filter(x -> not Set.memberOf(x, tyVars));
 
 
         ambiguousTyVars |> List.map(
@@ -43,6 +43,122 @@ mod Ambiguity {
                     List.memberOf(x, pTyVars)
                 })
             )
+        )
+    }
+}
+
+
+mod Test {
+    use Assert.assertEq
+
+
+    def predicatesFor(
+        tyVar: TypeVar,
+        ambiguities: List[Ambiguity]
+    ): List[Predicate] = {
+        let matching = ambiguities |> List.filter(
+            ambiguity -> Ambiguity.typeVar(ambiguity) == tyVar
+        );
+
+        match matching {
+            case Nil => Nil
+            case ambiguity :: _ => ambiguity |> Ambiguity.predicates
+        }
+    }
+
+
+    @Test
+    pub def findAmbiguitiesReturnsEmptyWhenAllVariablesAreFixed(): Unit \ Assert = {
+        let predA = Predicate.num(Type.varT("a"));
+        let predB = Predicate.integral(Type.varT("b"));
+
+        let ambiguities = Ambiguity.findAmbiguities(
+            (TypeVar.varT("a") :: TypeVar.varT("b") :: Nil) |> List.toSet,
+            predA :: predB :: Nil
+        );
+
+        assertEq({expected = Nil}, ambiguities)
+    }
+
+
+    @Test
+    pub def findAmbiguitiesCollectsAllPredicatesForUnfixedVariable(): Unit \ Assert = {
+        let a = TypeVar.varT("a");
+        let predA = Predicate.num(Type.varT("a"));
+        let predB = Predicate.fractional(Type.varT("a"));
+
+        let ambiguities = Ambiguity.findAmbiguities(
+            (TypeVar.varT("b") :: Nil) |> List.toSet,
+            predA :: predB :: Nil
+        );
+
+        assertEq(
+            {expected = (a :: Nil) |> List.toSet},
+            ambiguities |> List.map(Ambiguity.typeVar) |> List.toSet
+        );
+
+        assertEq(
+            {expected = (predA :: predB :: Nil) |> List.toSet},
+            ambiguities |> predicatesFor(a) |> List.toSet
+        )
+    }
+
+
+    @Test
+    pub def findAmbiguitiesIgnoresFixedVariables(): Unit \ Assert = {
+        let a = TypeVar.varT("a");
+        let b = TypeVar.varT("b");
+        let predA = Predicate.num(Type.varT("a"));
+        let predB = Predicate.integral(Type.varT("b"));
+
+        let ambiguities = Ambiguity.findAmbiguities(
+            (a :: Nil) |> List.toSet,
+            predA :: predB :: Nil
+        );
+
+        assertEq(
+            {expected = (b :: Nil) |> List.toSet},
+            ambiguities |> List.map(Ambiguity.typeVar) |> List.toSet
+        );
+
+        assertEq(
+            {expected = (predB :: Nil) |> List.toSet},
+            ambiguities |> predicatesFor(b) |> List.toSet
+        )
+    }
+
+
+    @Test
+    pub def findAmbiguitiesIncludesSharedPredicatesForEachUnfixedVariable()
+        : Unit \ Assert = {
+        let a = TypeVar.varT("a");
+        let b = TypeVar.varT("b");
+
+        let predA = Predicate.num(Type.varT("a"));
+        let predB = Predicate.integral(Type.varT("b"));
+        let shared = Predicate.createIsIn(
+            ClassId.eq(),
+            Type.arrowApply(Type.varT("a"), Type.varT("b"))
+        );
+
+        let ambiguities = Ambiguity.findAmbiguities(
+            Set.empty(),
+            predA :: predB :: shared :: Nil
+        );
+
+        assertEq(
+            {expected = (a :: b :: Nil) |> List.toSet},
+            ambiguities |> List.map(Ambiguity.typeVar) |> List.toSet
+        );
+
+        assertEq(
+            {expected = (predA :: shared :: Nil) |> List.toSet},
+            ambiguities |> predicatesFor(a) |> List.toSet
+        );
+
+        assertEq(
+            {expected = (predB :: shared :: Nil) |> List.toSet},
+            ambiguities |> predicatesFor(b) |> List.toSet
         )
     }
 }
