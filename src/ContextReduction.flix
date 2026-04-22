@@ -13,24 +13,27 @@ def isHnf(ty: Type): Bool =
     }
 
 
-pub enum ContextReductionError(Predicate) 
+pub eff ContextReductionFailure {
+    def error(error: Predicate): Void
+}
 
 
 def toHnfs(
     predicates: List[Predicate], 
     classEnv: ClassEnvironment
-):  Result[ContextReductionError, List[Predicate]] = {
+):  List[Predicate] \ ContextReductionFailure = {
     def traverse(
         preds: List[Predicate], 
         acc: List[Predicate]
-    ): Result[ContextReductionError, List[Predicate]] = 
+    ): List[Predicate] = 
         match preds {
-            case Nil => Ok(acc)
-            case pred :: rest => 
-                match toHnf(pred, classEnv) {
-                    case Err(err) => Err(err),
-                    case Ok(hnfs) => traverse(rest, hnfs ++ acc)
-                }
+            case Nil => acc
+
+            case pred :: rest => {
+                let hnfs = toHnf(pred, classEnv);
+
+                traverse(rest, hnfs ++ acc)
+            }
         };
 
     traverse(predicates, Nil)
@@ -40,16 +43,14 @@ def toHnfs(
 def toHnf(
     predicate: Predicate, 
     classEnv: ClassEnvironment
-):  Result[ContextReductionError, List[Predicate]] = {
+):  List[Predicate] \ ContextReductionFailure = {
     if (predicate |> Predicate.ty |> isHnf) {
-        Ok(predicate :: Nil)
+        predicate :: Nil
     } else {
         let res = classEnv |> byInstance(predicate);
 
         match res {
-            case None => Err(
-                ContextReductionError.ContextReductionError(predicate)
-            ),
+            case None => ContextReductionFailure.error(predicate)
 
             case Some(subgoals) => toHnfs(subgoals, classEnv)
         }
@@ -96,8 +97,8 @@ def simplify(
 pub def reduce(
     predicates: List[Predicate], 
     classEnv: ClassEnvironment
-): Result[ContextReductionError, List[Predicate]] = {
-    forM (
-        qs <- classEnv |> toHnfs(predicates)
-    ) yield simplify(qs, classEnv)
+):  List[Predicate] \ ContextReductionFailure = {
+    let hnfs = classEnv |> toHnfs(predicates);
+
+    classEnv |> simplify(hnfs)
 }
