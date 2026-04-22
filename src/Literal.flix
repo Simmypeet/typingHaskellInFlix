@@ -12,7 +12,7 @@ mod Literal {
     ): (List[Predicate], Type) \ TypeInference = {
         match lit {
             case Integer(_) => {
-                let tyVar = Type.Var(TypeInference.newTypeVar());
+                let tyVar = Type.Var(TypeInference.newTypeVar(Kind.Star));
 
                 (
                     Predicate.num(tyVar) :: Nil,
@@ -25,7 +25,7 @@ mod Literal {
             case String(_) => (Nil, Type.string())
 
             case Rational(_) => {
-                let tyVar = Type.Var(TypeInference.newTypeVar());
+                let tyVar = Type.Var(TypeInference.newTypeVar(Kind.Star));
 
                 (
                     Predicate.fractional(tyVar) :: Nil,

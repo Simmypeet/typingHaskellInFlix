@@ -14,8 +14,8 @@ mod TypeInferenceState {
         ()
     }
 
-    pub def newTypeVar(state: TypeInferenceState[r]): TypeVar \ r = {
-        let var = TypeVar.varT("@t" + Int32.toString(state->counter));
+    pub def newTypeVar(state: TypeInferenceState[r], kind: Kind): TypeVar \ r = {
+        let var = TypeVar.varK("@t" + Int32.toString(state->counter), kind);
         state->counter = state->counter + 1;
         var
     }
@@ -29,7 +29,7 @@ mod TypeInferenceState {
 pub eff TypeInference {
     def extendSubstitution(subst: Substitution): Unit
     def getSubstitution(): Substitution
-    def newTypeVar(): TypeVar
+    def newTypeVar(kind: Kind): TypeVar
 }
 
 
@@ -85,8 +85,12 @@ mod TypeInference {
                     k(TypeInferenceState.currentSubstitution(typeInferenceState))
                 }
 
-                def newTypeVar(k) = {
-                    let var = TypeInferenceState.newTypeVar(typeInferenceState);
+                def newTypeVar(kind, k) = {
+                    let var = TypeInferenceState.newTypeVar(
+                        typeInferenceState,
+                        kind
+                    );
+
                     k(var)
                 }
             }
@@ -122,7 +126,7 @@ mod TypeInference {
     ): Qualified[Type] \ TypeInference = {
         let foralls = scheme 
             |> Scheme.kinds 
-            |> List.map(_ -> Type.Var(TypeInference.newTypeVar()));
+            |> List.map(_ -> Type.Var(TypeInference.newTypeVar(Kind.Star)));
 
         Qualified.create(
             scheme |> Scheme.context |> Instantiate.instantiate(foralls),
@@ -148,9 +152,9 @@ mod Test {
 
     @Test
     def basicTypeInferenceUnification(): Unit \ TypeInference + UnificationFailure + Assert = {
-        let tvarA = Type.Var(TypeInference.newTypeVar());
-        let tvarB = Type.Var(TypeInference.newTypeVar());
-        let tvarC = Type.Var(TypeInference.newTypeVar());
+        let tvarA = Type.Var(TypeInference.newTypeVar(Kind.Star));
+        let tvarB = Type.Var(TypeInference.newTypeVar(Kind.Star));
+        let tvarC = Type.Var(TypeInference.newTypeVar(Kind.Star));
 
         let tyInt32 = Type.int32();
 

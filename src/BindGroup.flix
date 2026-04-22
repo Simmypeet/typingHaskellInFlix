@@ -1,0 +1,1 @@
+pub enum BindGroup(Unit) with Eq, Hash, Order, ToString

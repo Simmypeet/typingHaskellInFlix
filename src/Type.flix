@@ -31,6 +31,9 @@ pub enum TypeVar(Id, Kind) with Eq, Hash, Order, ToString
 
 mod TypeVar {
     pub def varT(name: String): TypeVar = TypeVar(Id.Id(name), Kind.Star)
+
+    
+    pub def varK(name: String, kind: Kind): TypeVar = TypeVar(Id.Id(name), kind)
 }
 
 

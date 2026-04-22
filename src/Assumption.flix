@@ -13,6 +13,11 @@ mod Variable {
 }
 
 
+pub eff AssumptionNotFoundFailure {
+    def notFound(variable: Variable): Void
+}
+
+
 ///
 /// Represents a type scheme associated with a variable. For example, 
 /// if we have a variable `x` with type scheme `forall a. Eq a => a -> a`, 
